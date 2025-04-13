@@ -35,7 +35,11 @@ services:
       - "3000:3000"
     restart: unless-stopped
     volumes:
+      # Mount Data sources
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      # Mount the dashboards
+      # - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      # Mount the Data
       - ./grafana-data:/var/lib/grafana
 
   # Agent for prometheus-sql
