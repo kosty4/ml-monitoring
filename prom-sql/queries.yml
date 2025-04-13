@@ -1,0 +1,26 @@
+# Name of the metric. Will be exposed as query_result_accuracy_model
+- accuracy_model:
+    # Help text seen for metrics exposed
+    help: Accuracy for model performance monitoring using a feedback loop
+
+    # Define the datasource as mentioned in config.yml
+    data-source: my-ds
+
+    # SQL string to query periodically
+    # Must return single row, single column
+    sql: >
+        SELECT
+            ROUND(CAST( SUM(correct_prediction) AS DECIMAL(7,4) ) / CAST( COUNT(*) AS DECIMAL(7,4) ), 4) as accuracy
+        FROM (
+            SELECT 
+                a.userid,
+                CASE WHEN a.actual = p.prediction THEN 1 ELSE 0 END AS correct_prediction
+            FROM 
+                actuals a
+            JOIN 
+                predictions p ON a.userid = p.userid
+        );
+
+    # The time between query execution. This should be set relative to the frequency
+    # of expected updates and the required granularity of changes.
+    interval: 1m

@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "monitoring-with-prometheus"
+version = "0.1.0"
+description = ""
+authors = ["Konstantin <email.email.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.115.12"
+uvicorn = "^0.34.0"
+requests = "^2.32.3"
+pandas = "^2.2.3"
+joblib = "^1.4.2"
+prometheus-client = ">=0.17.1"
+loguru = "^0.7.3"
+scikit-learn = "^1.6.1"
+psycopg2-binary = "^2.9.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

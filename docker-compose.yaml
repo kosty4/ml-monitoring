@@ -1,0 +1,87 @@
+version: "3"
+
+services:
+  api:
+    build: .
+    volumes:
+      - ./src/monitoring-with-prometheus:/app/monitoring-with-prometheus
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+
+
+  pushgateway:
+    image: prom/pushgateway:v1.6.0
+    container_name: pushgateway
+    restart: unless-stopped
+    expose:
+      - 9091
+    ports:
+      - "9091:9091"
+
+  prometheus:
+    image: prom/prometheus:v2.35.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - ./prometheus-data:/prometheus
+    command: --web.enable-lifecycle --config.file=/etc/prometheus/prometheus.yaml
+
+  grafana:
+    image: grafana/grafana:8.5.2
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    volumes:
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana-data:/var/lib/grafana
+
+  # Agent for prometheus-sql
+  sqlagent:
+    image: dbhi/sql-agent
+    links:
+        - postgres:postgres
+    depends_on:
+        - postgres
+
+  # Service to post Prometheus metrics by executing SQL queries
+  # NOTE: ADD DATA RELEVANT DATA SOURCE TO GRAFANA
+  prometheus-sql:
+    image: dbhi/prometheus-sql
+    links:
+        - sqlagent:sqlagent
+    depends_on:
+        - sqlagent
+    ports:
+        - 8080:8080
+    command:
+        - -config
+        - /config.yml
+        - -service
+        - http://sqlagent:5000
+    
+    # Specify where the queries file is mounted on the host.
+    volumes:
+        - ./prom-sql/config.yml:/config.yml
+        - ./prom-sql/queries.yml:/queries.yml
+
+  postgres:
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=monitoring_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+      # Startup script to create the actuals and predictions SQL tables
+      - ./db_init_scripts:/docker-entrypoint-initdb.d
+
+volumes:
+  prometheus-data:
+  grafana-data:
+  postgres-data:

@@ -1,0 +1,17 @@
+defaults:
+  data-source: my-ds
+  query-interval: 20s
+  query-timeout: 5s
+  query-value-on-error: -1
+
+# Defined data sources
+data-sources:
+  my-ds:
+    driver: postgres
+    properties:
+      host: postgres
+      port: 5432
+      user: postgres
+      password: postgres
+      database: monitoring_db
+      sslmode: disable

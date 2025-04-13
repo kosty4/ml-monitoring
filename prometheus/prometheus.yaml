@@ -1,0 +1,44 @@
+
+# scrape_configs:
+#   - job_name : services
+
+#     metrics_path: /metrics
+#     # list targets that you will scrape
+#     static_configs: 
+#       - targests:
+#       # docker compose prometheus service name (scrape itself+monitor itself)
+#       - "prometheus:9090"
+#       # docker compose seervice name
+#       - "api:9090"
+
+
+global:
+  #how often we do an http request from the app top retrieve metric
+  scrape_interval: 5s
+  #timeout of the http request
+  scrape_timeout: 1s
+
+scrape_configs:
+  - job_name: services
+    metrics_path: /metrics
+    # list targets that you will scrape
+    static_configs:
+      - targets:
+          # docker compose prometheus service name (scrape itself+monitor itself)
+          - "prometheus:9090"
+          - "api:8000"
+          
+  - job_name: pushgateway
+    metrics_path: /metrics
+    honor_labels: true
+    static_configs:
+      - targets:
+        - "pushgateway:9091"
+
+  # TODO
+  - job_name: prom-sql
+    metrics_path: /metrics
+    honor_labels: true
+    static_configs:
+      - targets:
+        - "prometheus-sql:8080"
