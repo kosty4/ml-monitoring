@@ -28,7 +28,6 @@ def simulate_feedback():
         data = row.to_json()
         r = requests.post("http://localhost:8000/feedback", data=data)
         logger.info(f"instance: {idx}, feedback: {r.json()}")
-
         logger.info(f"Sleeping delay for {SLEEP_SECONDS} seconds")
         time.sleep(SLEEP_SECONDS)
 

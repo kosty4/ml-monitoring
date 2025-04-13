@@ -145,7 +145,7 @@ def post_model_prediction(features: Features) -> int:
     return prediction
 
 
-# ML Model Monitoring
+# ML Model Feedback
 @app.post("/feedback")
 def post_feedback(feedback: Feedback) -> Feedback:
     """Post the `y_true` for the `user_id` in the feedback system"""
