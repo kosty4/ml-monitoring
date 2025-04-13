@@ -1,10 +1,9 @@
 import requests
 
-from prometheus_client import CollectorRegistry, Gauge, push_to_gateway, Histogram, pushadd_to_gateway
+from prometheus_client import CollectorRegistry, Gauge, push_to_gateway, Histogram, Counter, pushadd_to_gateway
 
 from constants import PUSH_GATEWAY_URL
-# # Create a Gauge metric
-# gauge = Gauge('example_metric', 'Example metric pushed to Push Gateway', labelnames=['label_name'], registry=registry)
+
 
 def push_gateway_observations(observations):
     # observations = [0, 0, 0, 0, 1.0]
@@ -12,16 +11,22 @@ def push_gateway_observations(observations):
     # Create a CollectorRegistry
     registry = CollectorRegistry()
 
-    # Create a Histogram metric
-    histogram = Histogram('training_histogram', 'Example histogram pushed to Push Gateway', buckets=[0.0, 1.0], registry=registry)
+    counter = Counter(
+        "training_counter",
+        "Class distribution of training samples",
+        labelnames=["observed_class"],
+        registry=registry
+    )
 
-    # Observe values in the histogram
+
+    # Observe values into the counter
     for value in observations:
-        histogram.observe(value)
+        counter.labels(observed_class=str(value)).inc()
 
     # Push the histogram to the Push Gateway
     push_to_gateway(PUSH_GATEWAY_URL, job='training_job', registry=registry)
 
+# TODO
 def push_gateway_numerical_feature_training(buckets, counts):
     """
     buckets:

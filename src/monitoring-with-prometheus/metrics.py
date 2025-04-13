@@ -22,8 +22,13 @@ REQUEST_LATENCY = Histogram(
 RESPONSE_DIST = Histogram(
     "response_distribution",
     "Response distribution of the predictions",
-    buckets=[0.0 ,1.0],
     labelnames=["model_version"],
+)
+
+PREDICT_COUNTER = Counter(
+    "prediction_counter",
+    "Class distribution of predictions",
+    labelnames=["model_version", "predicted_class"],
 )
 
 SEASONAL_GAUGE = Gauge(

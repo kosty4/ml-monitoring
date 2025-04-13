@@ -14,11 +14,23 @@ class DB_CREDENTIALS:
 class DatabaseManager:
 
     def __init__(self, credentials: DB_CREDENTIALS) -> None:
+        self.credentials = credentials.__dict__
 
-        self.connection = psycopg2.connect(
-            **credentials.__dict__
+    def run_query(self, query, params):
+        conn = self.connection = psycopg2.connect(
+            **self.credentials
         )
-
+        try:
+            with conn.cursor() as cur:
+                cur.execute(query, params)
+                conn.commit()
+        except psycopg2.Error as e:
+            print("Error inserting row:", e)
+        except Exception as e:
+            print("Generic exception:", e)
+            conn.rollback()
+        finally:
+            conn.close()
 
     def add_prediction(self, userid: str, value: str):
 
@@ -30,7 +42,7 @@ class DatabaseManager:
 
         insert_values = (userid, value)
 
-        self.insert_template(insert_query, insert_values)
+        self.run_query(insert_query, insert_values)
 
 
     def add_actual(self, userid: str, value: str):
@@ -42,14 +54,4 @@ class DatabaseManager:
         """
 
         insert_values = (userid, value)
-
-        self.insert_template(insert_query, insert_values)
-    
-
-    def insert_template(self, query, values):
-        try:
-            self.connection.cursor().execute(query, values)
-            self.connection.commit()
-
-        except psycopg2.Error as e:
-            print("Error inserting row:", e)
+        self.run_query(insert_query, insert_values)

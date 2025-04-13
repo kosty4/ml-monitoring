@@ -1,0 +1,14 @@
+datasources:
+  - name: Prometheus
+    access: proxy
+    type: prometheus
+    url: http://prometheus:9090
+    isDefault: true
+
+# NOTE DOES NOT WORK -> WHY NOT??? ASK.
+# datasources:
+#   - name: Prometheus SQL
+#     access: proxy
+#     type: prometheus
+#     url: http://prometheus-sql:8080
+#     isDefault: false
