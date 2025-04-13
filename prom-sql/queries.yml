@@ -10,7 +10,7 @@
     # Must return single row, single column
     sql: >
         SELECT
-            ROUND(CAST( SUM(correct_prediction) AS DECIMAL(7,4) ) / CAST( COUNT(*) AS DECIMAL(7,4) ), 4) as accuracy
+            ROUND( CAST( SUM(correct_prediction) AS DECIMAL ) / COUNT(*), 4) as accuracy
         FROM (
             SELECT 
                 a.userid,

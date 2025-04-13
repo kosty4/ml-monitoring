@@ -33,7 +33,7 @@ insert into actuals (userid, actual) values ('user4', 1);
 
 -- CALCULATE THE ACCURACY
 SELECT
-    ROUND(CAST( SUM(correct_prediction) AS DECIMAL(7,4) ) / CAST( COUNT(*) AS DECIMAL(7,4) ), 4) as accuracy
+    ROUND( CAST( SUM(correct_prediction) AS DECIMAL)  / COUNT(*)  , 4) as accuracy
 FROM (
     SELECT 
         a.userid,

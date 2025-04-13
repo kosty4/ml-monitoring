@@ -8,7 +8,7 @@ from loguru import logger
 import requests
 
 from train import load_data, parse_pandas_dtypes, split_X_y
-
+from constants import SLEEP_SECONDS
 
 if __name__ == "__main__":
 
@@ -21,11 +21,11 @@ if __name__ == "__main__":
     )
 
     logger.info(f"Simulating {len(X)} instances")
-    time.sleep(3)
 
     for i in range(len(X)):
         features = X.iloc[i].to_json()
         print('input features', features)
         r = requests.post("http://localhost:8000/predict/model", data=features)
         logger.info(f"instance: {i}, prediction: {r}")
-        time.sleep(10)
+        logger.info(f"Sleeping delay for {SLEEP_SECONDS} seconds")
+        time.sleep(SLEEP_SECONDS)

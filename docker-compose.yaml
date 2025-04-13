@@ -35,8 +35,14 @@ services:
       - "3000:3000"
     restart: unless-stopped
     volumes:
-      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      # Mount Data sources and Dashboards
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      # Mount the Data
       - ./grafana-data:/var/lib/grafana
+    environment:
+    - GF_SECURITY_ADMIN_USER=admin
+    - GF_SECURITY_ADMIN_PASSWORD=admin
 
   # Agent for prometheus-sql
   sqlagent:

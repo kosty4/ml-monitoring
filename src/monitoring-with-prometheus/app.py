@@ -17,7 +17,7 @@ from pydantic import BaseModel
 
 import pandas as pd
 
-from .metrics import REQUEST_COUNT, REQUEST_LATENCY, REQUEST_ERROR, RESPONSE_DIST, \
+from .metrics import REQUEST_COUNT, REQUEST_LATENCY, REQUEST_ERROR, RESPONSE_DIST, PREDICT_COUNTER, \
     SEASONAL_GAUGE, FEATURE_MONTANT
 
 from .db_manager import DB_CREDENTIALS, DatabaseManager
@@ -129,9 +129,9 @@ def post_model_prediction(features: Features) -> int:
     X = parse_pandas_dtypes(X)
 
     #Peform the prediction
-    prediction = model.predict(X).item()
+    prediction = str(model.predict(X).item())
 
-    RESPONSE_DIST.labels(model_version=MODEL_VERSION).observe(prediction)
+    PREDICT_COUNTER.labels(model_version=MODEL_VERSION, predicted_class=prediction).inc()
 
     # Data Drift Monitoring
     #Track the montant feature
@@ -139,13 +139,13 @@ def post_model_prediction(features: Features) -> int:
     FEATURE_MONTANT.labels(model_version=MODEL_VERSION).observe(features.montant)
 
     # Save the prediction to an SQL table for ML Model performance analysis
-    db_conn.add_prediction(userid=features.user_id, value=str(prediction))
+    db_conn.add_prediction(userid=features.user_id, value=prediction)
 
 
     return prediction
 
 
-# ML Model Monitoring
+# ML Model Feedback
 @app.post("/feedback")
 def post_feedback(feedback: Feedback) -> Feedback:
     """Post the `y_true` for the `user_id` in the feedback system"""

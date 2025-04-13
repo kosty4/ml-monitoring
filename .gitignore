@@ -51,5 +51,5 @@ grafana-data/
 # training data
 ml_models/train.csv
 
+# others
 /materials
-/grafana
