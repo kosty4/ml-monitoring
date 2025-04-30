@@ -53,7 +53,6 @@ services:
         - postgres
 
   # Service to post Prometheus metrics by executing SQL queries
-  # NOTE: ADD DATA RELEVANT DATA SOURCE TO GRAFANA
   prometheus-sql:
     image: dbhi/prometheus-sql
     links:
