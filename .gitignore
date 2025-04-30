@@ -52,4 +52,6 @@ grafana-data/
 ml_models/train.csv
 
 # others
-/materials
+/materials/slides
+
+other-notes.md
