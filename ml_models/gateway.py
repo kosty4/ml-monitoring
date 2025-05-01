@@ -27,10 +27,7 @@ def push_gateway_observations(observations):
     push_to_gateway(PUSH_GATEWAY_URL, job='training_job', registry=registry)
 
 # TODO
-def push_gateway_numerical_feature_training(buckets, counts):
-    """
-    buckets:
-    """
+def push_gateway_numerical_feature_training(feature_values):
 
     # Create a CollectorRegistry
     registry = CollectorRegistry()
@@ -38,8 +35,8 @@ def push_gateway_numerical_feature_training(buckets, counts):
     # Create a Histogram metric
     histogram = Histogram('montant_training', 'montant feature observed during training', buckets=buckets, registry=registry)
 
-    for i in counts:
-        histogram.observe(i)
+    for val in feature_values:
+        histogram.labels(stage="training").observe(val)
 
     # Push the histogram to the Push Gateway
     push_to_gateway(PUSH_GATEWAY_URL, job='drift_detection_job', registry=registry)

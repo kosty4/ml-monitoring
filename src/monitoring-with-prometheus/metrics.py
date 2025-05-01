@@ -38,9 +38,9 @@ SEASONAL_GAUGE = Gauge(
 
 
 FEATURE_MONTANT = Histogram(
-    "montant_feature",
-    "feature example distribution",
+    name="montant_feature",
+    documentation="feature example distribution",
+    labelnames=["stage", "model_version"],
     # buckets=[i for i in range(0, 50000, 5000)],
-    labelnames=["model_version"],
 )
 

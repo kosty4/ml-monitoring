@@ -14,7 +14,7 @@ from sklearn.tree import DecisionTreeClassifier
 
 from gateway import push_gateway_observations
 
-# DATA: https://www.kaggle.com/datasets/hamzaghanmi/expresso-churn-prediction-challenge?select=Train.csv
+from constants import NUM_TRAINING_SAMPLES
 
 categorical_features = [
     "region",
@@ -37,6 +37,20 @@ numerical_features = [
     "regularity",
     "freq_top_pack",
 ]
+
+# def monitor_conitinious_feature(feature: pd.Series):
+
+#     lower_bound = feature.quantile(0.025)
+#     upper_bound = feature.quantile(0.975)
+
+#     feature_n_percent = feature[(feature > lower_bound) & (feature < upper_bound)]
+
+#     num_bins = 30
+
+#     counts, bin_edges, patches = plt.hist(feature_n_percent, bins=num_bins)
+
+#     normalized_train_counts = train_counts / sum(train_counts)
+
 
 
 def load_data(data_path: Union[str, Path]) -> pd.DataFrame:
@@ -91,7 +105,7 @@ def save_model(model, timestamp):
     joblib.dump(model, filename)
 
 
-def train_model(data_path, n_rows=100_000):
+def train_model(data_path, n_rows=NUM_TRAINING_SAMPLES):
     """Training job for a model"""
 
     timestamp = f"{datetime.now():%Y-%m-%dT%H-%M-%S}"
@@ -130,8 +144,11 @@ def train_model(data_path, n_rows=100_000):
     model.fit(X, y)
     save_model(model, timestamp)
 
-
+    # Push the observed classes during training
     push_gateway_observations(y.values.tolist())
+
+    # TODO push the distributions of continious features
+    
 
     return model
 

@@ -134,9 +134,7 @@ def post_model_prediction(features: Features) -> int:
     PREDICT_COUNTER.labels(model_version=MODEL_VERSION, predicted_class=prediction).inc()
 
     # Data Drift Monitoring
-    #Track the montant feature
-    # FEATURE_MONTANT.set(X.montant)
-    FEATURE_MONTANT.labels(model_version=MODEL_VERSION).observe(features.montant)
+    FEATURE_MONTANT.labels(model_version=MODEL_VERSION, stage='prediction').observe(features.montant)
 
     # Save the prediction to an SQL table for ML Model performance analysis
     db_conn.add_prediction(userid=features.user_id, value=prediction)
