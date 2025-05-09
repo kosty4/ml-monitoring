@@ -44,12 +44,13 @@ var/
 prometheus-data/
 postgres-data/
 grafana-data/
+*.zip
 
 # trained models
 *.pkl
 
 # training data
-ml_models/train.csv
+train.csv
 
 # others
 /materials/slides

@@ -4,24 +4,31 @@
 
 This is a project that demonstrates the basics of data and ML prediction modnitoring. 
 
-What is monitored:
-- Input Data and the distribution of certain important features (Model input)
-- ML prediction distribution - measure the distribution of predicted classes.
-- ML model perforance using field feedback: we analyse the balance of the predicted classes with the actuals that come from the field with a delay
-
-
-![Architecture](materials/architecture.png)
+## Objective
+- The objective is to develop, serve and monitor a ML model that predicts if a customer will stop purchasing airtime and data from Expresso telecom provider.
 
 ## Data:
 
 - Expresso Churn Prediction Challenge
 https://www.kaggle.com/datasets/hamzaghanmi/expresso-churn-prediction-challenge?select=Train.csv
 
-## Objective
-- The objective is to develop a predictive model that determines the likelihood for a customer to churn - to stop purchasing airtime and data from Expresso telecom provider.
-Data contains information of about 2 million customers.
-Part of the data will be used for training and part will be used for simulating 
-inference requests to perform ML monitoring.
+- Data contains information of about 2 million customers.
+- Part of the data will be used for training and part will be used for simulating.
+
+### What is monitored?:
+
+We will monitor data, features, predictions and model performance over time.
+We do this in accordance to the Data Flow and Monitoring Priority :
+
+![Monitoring Priority](materials/Data_Flow_Monitoring_and_Priority.png)
+
+- Input Data and the distribution of certain important features (Model input)
+- ML prediction distribution - measure the distribution of predicted classes.
+- ML model perforance using field feedback: we analyse the balance of the predicted classes with the actuals that come from the field with a delay
+
+
+## Architecture
+![Architecture](materials/architecture.png)
 
 ## Requirements
 
@@ -40,7 +47,12 @@ Services that will be deployed:
 
 - localhost:3000 - Grafana Dashboard
 - localhost:9090 - Prometheus terminal
+- localhost:9091 - Prometheus Push Gateway
 - localhost:8000 - API
+
+Note: for Prometeus endpoints you can access the following endpoints:
+/metrics - display all scraped metrics
+/targets - visualize all scraping targets
 
 ### Download data
 ```bash
@@ -52,8 +64,8 @@ task download-data
 task train-model
 ``` 
 
-### Simulate predictions
-We will use the data that was not used in the training, to simulate a real-life scenario of serving.
+### Simulate prediction requests
+We will use the data that was not used in the training, to simulate a real-life scenario of getting predictions by a served ML model.
 
 ```bash
 task simulate-predictions
@@ -66,8 +78,12 @@ Record the actual values coming from the field if a customer left a data plan or
 task simulate-feedback
 ``` 
 
-## Data Flow Monitoring and Priority
-![Monitoring Priority](materials/Data_Flow_Monitoring_and_Priority.png)
+### Remove volume-mounted data
+Remove folders that are mounted with containers to get a clean state
+
+```bash
+task clean-state
+``` 
 
 
 ## Prometheus:

@@ -5,6 +5,14 @@ description = ""
 authors = ["Konstantin <email.email.com>"]
 readme = "README.md"
 
+[[tool.poetry.packages]]
+include = "api"
+from = "src"
+
+[[tool.poetry.packages]]
+include = "api"
+from = "src"
+
 [tool.poetry.dependencies]
 python = "^3.12"
 fastapi = "^0.115.12"
@@ -16,7 +24,12 @@ prometheus-client = ">=0.17.1"
 loguru = "^0.7.3"
 scikit-learn = "^1.6.1"
 psycopg2-binary = "^2.9.10"
+python-dotenv = "^1.1.0"
 
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.5"
+matplotlib = "^3.10.1"
 
 [build-system]
 requires = ["poetry-core"]

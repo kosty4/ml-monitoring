@@ -5,7 +5,7 @@ RUN pip install poetry==1.8.2
 
 WORKDIR /app
 
-COPY pyproject.toml poetry.lock ./
+COPY pyproject.toml poetry.lock .env ./
 
 #Contents of src will end up in the WORKDIR
 COPY src/ ./
@@ -13,4 +13,4 @@ COPY src/ ./
 RUN touch README.md
 RUN poetry install
 
-CMD ["poetry", "run", "uvicorn", "monitoring-with-prometheus.app:app", "--host", "0.0.0.0", "--reload"]
+CMD ["poetry", "run", "uvicorn", "api.app:app", "--host", "0.0.0.0", "--reload"]

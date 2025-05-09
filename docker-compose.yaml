@@ -4,7 +4,7 @@ services:
   api:
     build: .
     volumes:
-      - ./src/monitoring-with-prometheus:/app/monitoring-with-prometheus
+      - ./src/api:/app/api
     ports:
       - "8000:8000"
     depends_on:

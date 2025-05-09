@@ -1,29 +1,29 @@
 import asyncio
 import random
 import time
-
+import os
 import numpy as np
 import joblib
 import asyncio
-
+from dotenv import load_dotenv
 
 from fastapi import FastAPI
 
 from fastapi.responses import PlainTextResponse
 
-from prometheus_client import Counter, generate_latest, Histogram, Gauge
-
-from pydantic import BaseModel
+from prometheus_client import generate_latest
 
 import pandas as pd
 
-from .metrics import REQUEST_COUNT, REQUEST_LATENCY, REQUEST_ERROR, RESPONSE_DIST, PREDICT_COUNTER, \
-    SEASONAL_GAUGE, FEATURE_MONTANT
+from api.metrics import REQUEST_COUNT, REQUEST_LATENCY, REQUEST_ERROR, RESPONSE_DIST, PREDICT_COUNTER, \
+    SEASONAL_GAUGE, FEATURE_MONTANT, traffic_count, error_counter, latency_histogram
 
-from .db_manager import DB_CREDENTIALS, DatabaseManager
-from .models import Seasonal, Features, Feedback, parse_pandas_dtypes
+from api.db_manager import DB_CREDENTIALS, DatabaseManager
+from api.models import Seasonal, Features, Feedback, parse_pandas_dtypes
 
 # from prometheus_async.aio import time
+
+from ml_models.constants import SLEEP_SECONDS
 
 
 db_creds = DB_CREDENTIALS(dbname='monitoring_db', user='postgres', password='postgres', host='postgres', port=5432)
@@ -31,22 +31,11 @@ db_conn = DatabaseManager(credentials=db_creds)
 
 app = FastAPI()
 
+load_dotenv(dotenv_path='.env')
 
 # Load prediction model  == ML Monitoring imports
-MODEL_VERSION = "./monitoring-with-prometheus/DecisionTree_2025-04-13T11-43-06"
-model = joblib.load(f"{MODEL_VERSION}.pkl")
-
-
-traffic_count = Counter("traffic_count", documentation="Counter for counting visits")
-
-error_counter = Counter('error_count', "Error counter")
-
-with error_counter.count_exceptions(ValueError):
-    error_counter.inc()
-
-
-latency_histogram = Histogram('latency_histogram', 'Description of histogram')
-
+MODEL_VERSION = os.getenv('LATEST_ML_MODEL_ARTIFACT')
+model = joblib.load(MODEL_VERSION)
 
 
 @app.get("/")
@@ -56,7 +45,6 @@ def root():
 
 @app.get("/metrics", response_class=PlainTextResponse)
 def get_metrics():
-    
     return generate_latest()
 
 
@@ -67,24 +55,18 @@ def get_metrics():
 def get_random(sleep_time_max = 5): #note -> divided by 10
     traffic_count.inc()
 
-
     # We are doing some computation
-    sleep_time = random.uniform(1,sleep_time_max) / 10
-
+    sleep_time = random.uniform(1, sleep_time_max) / 10
 
     # Some computation fails
     if sleep_time < 0.2:
         error_counter.inc()
-        # raise ValueError
+    #     # raise ValueError
 
     # FastAPI is synchronous unless defined differently
     time.sleep( sleep_time )
 
-
-    # latency_histogram.observe(sleep_time)
-
-    
-    return random.uniform(0,100)
+    return sleep_time
 
 
 @app.post("/predict/seasonal")
@@ -96,8 +78,6 @@ def post_seasonal_prediction(seasonal: Seasonal) -> Seasonal:
 
 
 # New --- ML Monitoring
-
-
 @app.get("/predict/random")
 # @time(REQUEST_LATENCY.labels(model_version="random"))  # async time functionality
 async def get_random_prediction(time_delay_scale: float = 0.1, error_rate: float = 0.01) -> float:
@@ -134,9 +114,7 @@ def post_model_prediction(features: Features) -> int:
     PREDICT_COUNTER.labels(model_version=MODEL_VERSION, predicted_class=prediction).inc()
 
     # Data Drift Monitoring
-    #Track the montant feature
-    # FEATURE_MONTANT.set(X.montant)
-    FEATURE_MONTANT.labels(model_version=MODEL_VERSION).observe(features.montant)
+    FEATURE_MONTANT.labels(model_version=MODEL_VERSION, stage='prediction').observe(features.montant)
 
     # Save the prediction to an SQL table for ML Model performance analysis
     db_conn.add_prediction(userid=features.user_id, value=prediction)
