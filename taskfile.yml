@@ -10,23 +10,31 @@ tasks:
     desc: "Download data for training the ML model"
     cmds:
       - curl -L -o ./expresso-churn-prediction-challenge.zip https://www.kaggle.com/api/v1/datasets/download/hamzaghanmi/expresso-churn-prediction-challenge
-      - unzip -j ./expresso-churn-prediction-challenge.zip '*/train.csv' -d ./ml_models
+      - unzip -j ./expresso-churn-prediction-challenge.zip '*/train.csv' -d ./src/ml_models/data
       - rm expresso-churn-prediction-challenge.zip
 
   train-model:
     desc: "Train the Machine Leaning model and create model artifact"
     cmds:
-      - python ml_models/train.py
+      - python src/ml_models/train.py
 
   simulate-predictions:
     desc: "Run requests to the ML model to generate predictions on unseen data"
     cmds:
-      - python ml_models/simulate_predictions.py
+      - python src/ml_models/simulate_predictions.py
 
   simulate-feedback:
     desc: "After the actual data has been recieved from real life (if a customer cancelled the plan or not), simulate the feedback to get the ML model metrics like accurracy based on the predictions it has made."
     cmds:
-      - python ml_models/simulate_feedback.py
+      - python src/ml_models/simulate_feedback.py
+
+  clean-state:
+    desc: "Remove the mounted folders for a clean state"
+    cmds:
+      - rm -rf grafana-data
+      - rm -rf postgres-data
+      - rm -rf prometheus-data
+
 
 
     

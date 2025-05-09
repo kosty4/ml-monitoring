@@ -7,13 +7,13 @@ import time
 
 from loguru import logger
 import requests
-from train import load_data, parse_pandas_dtypes
-from constants import SLEEP_SECONDS, NUM_TRAINING_SAMPLES
+from ml_models.train import load_data, parse_pandas_dtypes
+from ml_models.constants import SLEEP_SECONDS, NUM_TRAINING_SAMPLES, ML_DATA_DIRECTORY
 
 def simulate_feedback():
 
     df = (
-        load_data("ml_models/train.csv")
+        load_data(f"{ML_DATA_DIRECTORY}/train.csv")
         .loc[NUM_TRAINING_SAMPLES:, :]
         .reset_index(drop=True)
         .pipe(parse_pandas_dtypes)

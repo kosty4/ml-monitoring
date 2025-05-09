@@ -1,6 +1,18 @@
 from prometheus_client import Counter, Gauge, Histogram
 
 
+traffic_count = Counter("traffic_count", documentation="Counter for counting visits")
+
+error_counter = Counter('error_count', "Error counter")
+
+with error_counter.count_exceptions(ValueError):
+    error_counter.inc()
+
+
+latency_histogram = Histogram('latency_histogram', 'Description of histogram')
+
+
+
 REQUEST_COUNT = Counter(
     "request_count",
     "Total number of requests",

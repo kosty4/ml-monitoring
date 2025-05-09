@@ -7,13 +7,13 @@ import time
 from loguru import logger
 import requests
 
-from train import load_data, parse_pandas_dtypes, split_X_y
-from constants import SLEEP_SECONDS, NUM_TRAINING_SAMPLES
+from ml_models.train import load_data, parse_pandas_dtypes, split_X_y
+from ml_models.constants import SLEEP_SECONDS, NUM_TRAINING_SAMPLES, ML_DATA_DIRECTORY
 
-if __name__ == "__main__":
+def simulate_predictions():
 
     X, _ = (
-        load_data("ml_models/train.csv")
+        load_data(f"{ML_DATA_DIRECTORY}/train.csv")
         .loc[NUM_TRAINING_SAMPLES:, :]
         .reset_index(drop=True)
         .pipe(parse_pandas_dtypes)
@@ -29,3 +29,6 @@ if __name__ == "__main__":
         logger.info(f"instance: {i}, prediction: {r}")
         logger.info(f"Sleeping delay for {SLEEP_SECONDS} seconds")
         time.sleep(SLEEP_SECONDS)
+
+if __name__ == "__main__":
+    simulate_predictions()

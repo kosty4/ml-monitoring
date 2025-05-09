@@ -47,7 +47,12 @@ Services that will be deployed:
 
 - localhost:3000 - Grafana Dashboard
 - localhost:9090 - Prometheus terminal
+- localhost:9091 - Prometheus Push Gateway
 - localhost:8000 - API
+
+Note: for Prometeus endpoints you can access the following endpoints:
+/metrics - display all scraped metrics
+/targets - visualize all scraping targets
 
 ### Download data
 ```bash
@@ -73,6 +78,12 @@ Record the actual values coming from the field if a customer left a data plan or
 task simulate-feedback
 ``` 
 
+### Remove volume-mounted data
+Remove folders that are mounted with containers to get a clean state
+
+```bash
+task clean-state
+``` 
 
 
 ## Prometheus:

@@ -30,6 +30,8 @@ scrape_configs:
           
   - job_name: pushgateway
     metrics_path: /metrics
+    # honor_labels tells Prometheus to use the labels as they are exposed by the target (adding a custom job argument), 
+    # instead of overriding them with the job_name from the scrape_configs.
     honor_labels: true
     static_configs:
       - targets:

@@ -1,6 +1,7 @@
 from datetime import datetime
 from pathlib import Path
 from typing import Union
+import numpy as np
 
 import joblib
 from loguru import logger
@@ -12,9 +13,11 @@ from sklearn.pipeline import FeatureUnion, Pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.tree import DecisionTreeClassifier
 
-from gateway import push_gateway_observations
+from prometheus_client import push_to_gateway, CollectorRegistry
 
-from constants import NUM_TRAINING_SAMPLES
+from ml_models.gateway import push_gateway_observations, push_gateway_numerical_feature_training
+from ml_models.constants import NUM_TRAINING_SAMPLES, PUSH_GATEWAY_URL, ML_MODEL_DIRECTORY, ML_DATA_DIRECTORY
+from ml_models.utils import write_to_env
 
 categorical_features = [
     "region",
@@ -38,18 +41,21 @@ numerical_features = [
     "freq_top_pack",
 ]
 
-# def monitor_conitinious_feature(feature: pd.Series):
+def get_bins_continious_feature(feature: pd.Series, normalize=True):
 
-#     lower_bound = feature.quantile(0.025)
-#     upper_bound = feature.quantile(0.975)
+    lower_bound = feature.quantile(0.025)
+    upper_bound = feature.quantile(0.975)
 
-#     feature_n_percent = feature[(feature > lower_bound) & (feature < upper_bound)]
+    feature_n_percent = feature[(feature > lower_bound) & (feature < upper_bound)]
 
-#     num_bins = 30
+    num_bins = 30
 
-#     counts, bin_edges, patches = plt.hist(feature_n_percent, bins=num_bins)
+    counts, bin_edges = np.histogram(feature_n_percent, bins=num_bins)
 
-#     normalized_train_counts = train_counts / sum(train_counts)
+    if normalize:
+        counts = counts / sum(counts)
+
+    return counts, bin_edges
 
 
 
@@ -100,9 +106,15 @@ def split_X_y(df):
 
 def save_model(model, timestamp):
     """Save model to a pickle file using joblib"""
-    filename = f"ml_models/DecisionTree_{timestamp}.pkl"
+    model_name = f"DecisionTree_{timestamp}"
+    filename = f"{ML_MODEL_DIRECTORY}/{model_name}.pkl"
+
     logger.info(f"Saving model to file: {filename}")
     joblib.dump(model, filename)
+
+    write_to_env('LATEST_ML_MODEL_ARTIFACT', filename)
+
+    return model_name
 
 
 def train_model(data_path, n_rows=NUM_TRAINING_SAMPLES):
@@ -142,17 +154,30 @@ def train_model(data_path, n_rows=NUM_TRAINING_SAMPLES):
 
     logger.info("Start model fitting, this may take a while ...")
     model.fit(X, y)
-    save_model(model, timestamp)
+    model_name = save_model(model, timestamp)
+
+    # === Push some metrics after the ML model training ===
+
+    # Create a CollectorRegistry
+    registry = CollectorRegistry()
 
     # Push the observed classes during training
-    push_gateway_observations(y.values.tolist())
+    push_gateway_observations(registry, y.values.tolist(), model_version=model_name)
+
+    # TODO persis bucket definitions: Use SQL to store and version buckets ensures consistency across environments.
+    _, buckets = get_bins_continious_feature(X['montant'])
 
     # TODO push the distributions of continious features
-    
+    push_gateway_numerical_feature_training(registry, X['montant'].values, model_version=model_name, buckets=buckets)
+
+    # Push the collection of metrics to the push gateway in one go.
+    push_to_gateway(PUSH_GATEWAY_URL, job='training_job', registry=registry)
+
+
 
     return model
 
 
 if __name__ == "__main__":
-    print(Path.cwd())
-    train_model(Path("./ml_models/train.csv"))
+    # print(Path.cwd())
+    train_model(Path(f"{ML_DATA_DIRECTORY}/train.csv"))
