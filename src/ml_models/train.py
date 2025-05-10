@@ -2,7 +2,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Union
 import numpy as np
-
+import json
 import joblib
 from loguru import logger
 import pandas as pd
@@ -18,6 +18,11 @@ from prometheus_client import push_to_gateway, CollectorRegistry
 from ml_models.gateway import push_gateway_observations, push_gateway_numerical_feature_training
 from ml_models.constants import NUM_TRAINING_SAMPLES, PUSH_GATEWAY_URL, ML_MODEL_DIRECTORY, ML_DATA_DIRECTORY
 from ml_models.utils import write_to_env
+
+from db.db_manager import DB_CREDENTIALS, DatabaseManager
+
+db_creds = DB_CREDENTIALS(dbname='monitoring_db', user='postgres', password='postgres', host='localhost', port=5432)
+db_conn = DatabaseManager(credentials=db_creds)
 
 categorical_features = [
     "region",
@@ -41,7 +46,7 @@ numerical_features = [
     "freq_top_pack",
 ]
 
-def get_bins_continious_feature(feature: pd.Series, normalize=True):
+def get_bins_continious_feature(feature: pd.Series,  normalize=True):
 
     lower_bound = feature.quantile(0.025)
     upper_bound = feature.quantile(0.975)
@@ -56,6 +61,20 @@ def get_bins_continious_feature(feature: pd.Series, normalize=True):
         counts = counts / sum(counts)
 
     return counts, bin_edges
+
+def persist_bins_continious_feature(feature_name, model_version, bin_edges):
+
+    bin_edges = bin_edges.round(decimals=2).tolist()
+
+    buckets_json = json.dumps(bin_edges)
+    # Record into a DB
+    INSERT_QUERY = """
+        INSERT INTO histogram_buckets (metric_name, metric_name, model_version, buckets)
+        VALUES (%s, %s, %s::jsonb)
+    """
+
+    insert_values = (feature_name, 'continuous', model_version, buckets_json)
+    db_conn.run_query(INSERT_QUERY, insert_values)
 
 
 
@@ -156,6 +175,17 @@ def train_model(data_path, n_rows=NUM_TRAINING_SAMPLES):
     model.fit(X, y)
     model_name = save_model(model, timestamp)
 
+    push_metrics(X, y, model_name)
+
+    return model
+
+def push_metrics(X, y, model_name):
+    """
+    Push metrics to Prometheus based on the data observed during training
+    - sample classes
+    - categorical features
+    - continious features
+    """
     # === Push some metrics after the ML model training ===
 
     # Create a CollectorRegistry
@@ -163,19 +193,18 @@ def train_model(data_path, n_rows=NUM_TRAINING_SAMPLES):
 
     # Push the observed classes during training
     push_gateway_observations(registry, y.values.tolist(), model_version=model_name)
+    
+    # Calculate the bucket ranges based on the data
+    _, buckets = get_bins_continious_feature(feature=X['montant'])
 
-    # TODO persis bucket definitions: Use SQL to store and version buckets ensures consistency across environments.
-    _, buckets = get_bins_continious_feature(X['montant'])
+    # Persist the bucket definitions to ensure consistency across environments.
+    persist_bins_continious_feature('montant', model_name, buckets )
 
     # TODO push the distributions of continious features
     push_gateway_numerical_feature_training(registry, X['montant'].values, model_version=model_name, buckets=buckets)
 
     # Push the collection of metrics to the push gateway in one go.
     push_to_gateway(PUSH_GATEWAY_URL, job='training_job', registry=registry)
-
-
-
-    return model
 
 
 if __name__ == "__main__":
