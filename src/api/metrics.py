@@ -37,6 +37,12 @@ RESPONSE_DIST = Histogram(
     labelnames=["model_version"],
 )
 
+TRAINING_COUNTER = Counter(
+    name="training_counter",
+    documentation="Class distribution of training samples",
+    labelnames=["model_version", "observed_class"],
+)
+
 PREDICT_COUNTER = Counter(
     "prediction_counter",
     "Class distribution of predictions",
@@ -49,10 +55,10 @@ SEASONAL_GAUGE = Gauge(
 )
 
 
+# Example of a continious feature
 FEATURE_MONTANT = Histogram(
     name="montant_feature",
-    documentation="feature example distribution",
+    documentation="montant feature distribution",
     labelnames=["stage", "model_version"],
-    # buckets=[i for i in range(0, 50000, 5000)],
 )
 

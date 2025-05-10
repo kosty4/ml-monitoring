@@ -18,7 +18,7 @@ import pandas as pd
 from api.metrics import REQUEST_COUNT, REQUEST_LATENCY, REQUEST_ERROR, RESPONSE_DIST, PREDICT_COUNTER, \
     SEASONAL_GAUGE, FEATURE_MONTANT, traffic_count, error_counter, latency_histogram
 
-from api.db_manager import DB_CREDENTIALS, DatabaseManager
+from db.db_manager import DB_CREDENTIALS, DatabaseManager
 from api.models import Seasonal, Features, Feedback, parse_pandas_dtypes
 
 # from prometheus_async.aio import time
@@ -76,6 +76,16 @@ def post_seasonal_prediction(seasonal: Seasonal) -> Seasonal:
     return seasonal
 
 
+@app.get("/reload-metrics")
+def post_metrics_reload():
+
+    # TODO
+
+    # Read the DB
+    # Create metrics 
+    # record the metrics in a class so that they are accessiblex
+    return "Metrics reloaded"
+
 
 # New --- ML Monitoring
 @app.get("/predict/random")
@@ -112,6 +122,9 @@ def post_model_prediction(features: Features) -> int:
     prediction = str(model.predict(X).item())
 
     PREDICT_COUNTER.labels(model_version=MODEL_VERSION, predicted_class=prediction).inc()
+
+    # TODO retrieve from the factory class
+
 
     # Data Drift Monitoring
     FEATURE_MONTANT.labels(model_version=MODEL_VERSION, stage='prediction').observe(features.montant)
